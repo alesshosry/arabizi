@@ -1,1 +1,15 @@
-<p>home works!</p>
+<div class="container">
+    <h2>Arabic ↔ Arabizi Converter</h2>
+
+
+    <textarea [(ngModel)]="inputText" placeholder="Enter Arabic or Arabizi text" rows="5" class="form-control">
+  </textarea>
+    <div class="buttons">
+        <button (click)="convertToArabizi()">Arabic → Arabizi</button>
+        <button (click)="convertToArabic()">Arabizi → Arabic</button>
+        <button (click)="clear()">Clear</button>
+    </div>
+
+    <textarea [value]="outputText" placeholder="Result" rows="5" class="form-control" readonly>
+  </textarea>
+</div>
