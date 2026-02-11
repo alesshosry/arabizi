@@ -6,44 +6,159 @@ import { Injectable } from '@angular/core';
 export class ArabiziConverterService {
 
   private arToArabizi: Record<string, string> = {
-    'ا': 'a', 'أ': '2a', 'إ': '2e', 'آ': 'aa',
-    'ء': '2', 'ؤ': '2', 'ئ': '2',
+    'ا': 'a',
+    'أ': '2a',
+    'إ': '2e',
+    'آ': 'aa',
+    'ء': '2',
+    'ؤ': '2',
+    'ئ': '2',
 
-    'ب': 'b', 'ت': 't', 'ث': 'th', 'ج': 'j',
-    'ح': '7', 'خ': '5', 'د': 'd', 'ذ': 'dh',
-    'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 'sh',
-    'ص': '9', 'ض': "9'", 'ط': '6', 'ظ': "6'",
-    'ع': '3', 'غ': "3'", 'ف': 'f', 'ق': '8',
-    'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
-    'ه': 'h', 'و': 'w', 'ي': 'y',
-    'ى': 'a', 'ة': 'a'
+    'َ': 'a',
+    'ِ': 'i',
+    'ُ': 'ou',
+
+    // Tanwin 
+    'ً': 'an',
+    'ٍ': 'in',
+    'ٌ': 'oun',
+
+    'ْ': '',
+    'ّ': '',
+
+    'ب': 'b',
+    'ت': 't',
+    'ث': 'th',
+    'ج': 'j',
+    'ح': '7',
+    'خ': 'kh',
+    'د': 'd',
+    'ذ': 'z',
+    'ر': 'r',
+    'ز': 'z',
+    'س': 's',
+    'ش': 'sh',
+    'ص': 's',
+    'ض': "d'",
+    'ط': 't',
+    'ظ': 'z',
+    'ع': '3',
+    'غ': 'gh',
+    'ف': 'f',
+    'ق': 'k',
+    'ك': 'k',
+    'ل': 'l',
+    'م': 'm',
+    'ن': 'n',
+    'ه': 'h',
+    'ي': 'i',
+    'ى': 'a',
+    'ة': 'a'
   };
 
   private arabiziToAr: Record<string, string> = {
-    "9'": 'ض', "6'": 'ظ', "3'": 'غ',
-    "sh": 'ش', "th": 'ث', "dh": 'ذ',
-    "2a": 'أ', "2e": 'إ', "aa": 'آ',
+    "2a": 'أ',
+    "2e": 'إ',
+    "aa": 'آ',
 
-    "2": 'ء', "3": 'ع', "5": 'خ',
-    "6": 'ط', "7": 'ح', "8": 'ق', "9": 'ص',
+    // Tanwin reverse support 
+    "an": 'ً',
+    "in": 'ٍ',
+    "oun": 'ٌ',
 
-    "a": 'ا', "b": 'ب', "t": 'ت',
-    "j": 'ج', "d": 'د', "r": 'ر',
-    "z": 'ز', "s": 'س', "f": 'ف',
-    "k": 'ك', "l": 'ل', "m": 'م',
-    "n": 'ن', "h": 'ه', "w": 'و',
-    "y": 'ي'
+    "ou": 'و',
+    "kh": 'خ',
+    "gh": 'غ',
+    "sh": 'ش',
+    "th": 'ث',
+    "d'": 'ض',
+    "2": 'ء',
+    "3": 'ع',
+    "a": 'ا',
+    "i": 'ي',
+    "b": 'ب',
+    "t": 'ت',
+    "j": 'ج',
+    "d": 'د',
+    "r": 'ر',
+    "z": 'ز',
+    "s": 'س',
+    "f": 'ف',
+    "k": 'ك',
+    "l": 'ل',
+    "m": 'م',
+    "n": 'ن',
+    "h": 'ه',
+    "w": 'و'
   };
 
-  private removeDiacritics(text: string): string {
-    return text.replace(/[\u064B-\u065F\u0670]/g, '');
-  }
+
+  // private removeDiacritics(text: string): string {
+  //   // Remove everything except tanwin
+  //   return text.replace(/[\u064E\u064F\u0650\u0652\u0651\u0670]/g, '');
+  // }
 
   arabicToArabizi(text: string): string {
-    text = this.removeDiacritics(text);
 
     let result = '';
-    for (const char of text) {
+    const vowels = ['a', 'i', 'ou'];
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+
+      const isStartOfWord = i === 0 || text[i - 1] === ' ';
+
+      //Rule: "ال" at beginning
+      if (isStartOfWord && text.substring(i, i + 2) === 'ال') {
+        result += 'l';
+        i += 1;
+        continue;
+      }
+
+      // Rule: beginning ا → skip (I guess hayde l rule fine khalliya w chil li fo2)
+      if (isStartOfWord && char === 'ا') {
+        continue;
+      }
+
+      //Special handling for و  aw2at btelafaz w aw2at ou 
+      if (char === 'و') {
+        const lastOutput = result;
+
+        if (isStartOfWord) {
+          result += 'w';
+        } else if (vowels.some(v => lastOutput.endsWith(v))) {
+          result += 'w';
+        } else {
+          result += 'ou';
+        }
+
+        continue;
+      }
+
+      // Special handling for ي + vowel; lezem zid lal و bas ma bade okhbosa ma3 condition fo2
+      if (char === 'ي') {
+        const nextChar = text[i + 1] ?? '';
+        if (nextChar === 'َ') {
+          result += 'ya';
+          i += 1;
+          continue;
+        }
+        if (nextChar === 'ِ') {
+          result += 'yi';
+          i += 1;
+          continue;
+        }
+        if (nextChar === 'ُ') {
+          result += 'you';
+          i += 1;
+          continue;
+        }
+        // standalone ي
+        result += 'i';
+        continue;
+      }
+
+      // Default mapping
       result += this.arToArabizi[char] ?? char;
     }
 
@@ -52,28 +167,61 @@ export class ArabiziConverterService {
 
   arabiziToArabic(text: string): string {
     let result = '';
-    let i = 0;
+    const vowels = ['a', 'i', 'ou'];
 
-    while (i < text.length) {
-      const twoChar = text.substring(i, i + 2);
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const nextChar = text[i + 1] ?? '';
+      const nextTwo = text.substring(i, i + 2);
+      const nextThree = text.substring(i, i + 3);
+      const isStartOfWord = i === 0 || text[i - 1] === ' ';
 
-      if (this.arabiziToAr[twoChar]) {
-        result += this.arabiziToAr[twoChar];
-        i += 2;
+      // Rule: 'l' at start of word → 'ال'
+      if (isStartOfWord && char === 'l') {
+        result += 'ال';
         continue;
       }
 
-      const oneChar = text[i];
-
-      if (this.arabiziToAr[oneChar]) {
-        result += this.arabiziToAr[oneChar];
-      } else {
-        result += oneChar;
+      // Special handling for 'you', 'yi', 'ya'
+      if (nextThree === 'you') { // nextThree will be defined below
+        result += 'يُ';
+        i += 2; // skip 3 letters
+        continue;
+      }
+      if (nextTwo === 'yi') {
+        result += 'يِ';
+        i += 1;
+        continue;
+      }
+      if (nextTwo === 'ya') {
+        result += 'يَ';
+        i += 1;
+        continue;
       }
 
-      i++;
+      // standalone 'i' → 'ي'
+      if (char === 'i') {
+        result += 'ي';
+        continue;
+      }
+
+      // Handling 'ou' or 'w' → 'و'
+      if (nextTwo === 'ou') {
+        result += 'و';
+        i += 1; // skip next letter
+        continue;
+      }
+      if (char === 'w') {
+        result += 'و';
+        continue;
+      }
+
+      // Default reverse mapping
+      result += this.arabiziToAr[char] ?? char;
     }
 
     return result;
   }
+
+
 }
